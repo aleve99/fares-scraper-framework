@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fares-scraper"
-version = "0.7.0"
+version = "0.7.1"
 description = "A modular, asynchronous framework for scraping airline fares"
 readme = "README.md"
 authors = [
@@ -27,8 +27,8 @@ dependencies = [
   ]
 
 [project.urls]
-"Homepage" = "https://github.com/aleve99/fares-scraper-framework"
-"Bug Tracker" = "https://github.com/aleve99/fares-scraper-framework/issues"
+"Homepage" = "https://github.com/aleve99/fares-scraper"
+"Bug Tracker" = "https://github.com/aleve99/fares-scraper/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
