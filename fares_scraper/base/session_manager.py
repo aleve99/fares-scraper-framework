@@ -4,7 +4,7 @@ import logging
 from itertools import cycle
 from typing import List, Dict, Optional
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("scraper.session_manager")
 
 class SessionManager:
     """

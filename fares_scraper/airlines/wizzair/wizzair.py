@@ -15,7 +15,7 @@ from .models import (
     WizzAirTimetableFlight
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("scraper.wizzair")
 
 class WizzAirScraper(BaseScraper):
     def __init__(self, config: ScraperSettings = settings):
@@ -23,7 +23,9 @@ class WizzAirScraper(BaseScraper):
             config=config,
             base_url="https://be.wizzair.com",
             warm_up_url="https://www.wizzair.com/",
-            default_headers={}
+            default_headers={
+
+            }
         )
         self.build_number = None
         self._connections: Dict[str, Tuple[str, ...]] = {}
@@ -81,6 +83,7 @@ class WizzAirScraper(BaseScraper):
         if not self._connections:
             await self.update_active_airports()
         
+        logger.info(f"Getting destinations for {origin}")
         return self._connections.get(origin, tuple())
 
     async def _fetch_detailed_flights(self, origin: str, destination: str, date_obj: date) -> List[WizzAirDetailedFlight]:
@@ -160,6 +163,7 @@ class WizzAirScraper(BaseScraper):
         if not destinations:
             destinations = await self.get_destination_codes(origin)
 
+        logger.info(f"Getting one-way fares for {origin} to {len(destinations)} destinations")
         if not to_date:
             to_date = from_date + timedelta(days=1) # Default to just one day
 
@@ -184,6 +188,7 @@ class WizzAirScraper(BaseScraper):
                 tasks.append(self.post(url, json=payload.to_dict(), stateless=True))
                 current_from = current_to + timedelta(days=1)
 
+        logger.info(f"Executing {len(tasks)} timetable requests concurrently.")
         results: ConcurrentResults = await self.run_concurrently(tasks)
         
         price_results: List[WizzAirTimetableFlight] = [] # List of flights with price
@@ -213,7 +218,7 @@ class WizzAirScraper(BaseScraper):
         if not detailed_tasks:
             return []
 
-        logger.info(f"Enriching {len(price_results)} price entries with detailed flight info for {len(detailed_tasks)} unique route-days.")
+        logger.info(f"Enriching {len(price_results)} price entries with detailed flight info for {len(detailed_tasks)} unique {origin} dates.")
         detailed_results: ConcurrentResults = await self.run_concurrently(detailed_tasks)
         
         # Map detailed results by (origin, destination, departure_time)
@@ -247,6 +252,7 @@ class WizzAirScraper(BaseScraper):
             else:
                 logger.warning(f"Detailed info missing for {flight.departureStation}-{flight.arrivalStation} on {flight.departureDate}. Skipping fare.")
 
+        logger.info(f"Scraped {origin} one-way fares in {results.execution_time:.2f}s, found {len(fares)} fares.")
         return fares
 
     async def search_round_trip_fares(
@@ -261,6 +267,7 @@ class WizzAirScraper(BaseScraper):
         if not destinations:
             destinations = await self.get_destination_codes(origin)
         
+        logger.info(f"Getting round-trip fares for {origin} to {len(destinations)} destinations")
         if not to_date:
             to_date = from_date + timedelta(days=30)
 
@@ -291,6 +298,7 @@ class WizzAirScraper(BaseScraper):
                 tasks.append(self.post(url, json=payload.to_dict(), stateless=True))
                 current_from = current_to + timedelta(days=1)
 
+        logger.info(f"Executing {len(tasks)} timetable requests concurrently.")
         results: ConcurrentResults = await self.run_concurrently(tasks)
         
         price_results = [] # List of (outbound_flights, return_flights)
@@ -380,6 +388,7 @@ class WizzAirScraper(BaseScraper):
                         
                         all_round_trip_fares.append(RoundTripFare(outbound=out_fare, inbound=ret_fare))
         
+        logger.info(f"Scraped {origin} round-trip fares in {results.execution_time:.2f}s, found {len(all_round_trip_fares)} fares.")
         return all_round_trip_fares
 
     @classmethod

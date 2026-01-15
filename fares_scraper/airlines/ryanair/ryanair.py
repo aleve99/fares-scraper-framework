@@ -8,13 +8,9 @@ from ...base.base_scraper import BaseScraper
 from ...base.types import Airport, OneWayFare, RoundTripFare, Schedule, ConcurrentResults
 from ...base.config import settings, ScraperSettings
 from .payload import get_farfnd_one_way_payload, get_availabilty_payload
-from .models import (
-    RyanairAirportResponse, 
-    RyanairScheduleResponse,
-    RyanairFarfndResponse
-)
+from .models import RyanairAirportResponse, RyanairScheduleResponse
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("scraper.ryanair")
 
 class RyanairScraper(BaseScraper):
     OPERATORS = {

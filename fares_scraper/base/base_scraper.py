@@ -9,11 +9,11 @@ from datetime import date, time
 
 from .session_manager import SessionManager
 from .config import settings, ScraperSettings
-from .exceptions import ScraperError, ProxyBlockedError, RateLimitError
-from .types import Airport, OneWayFare, RoundTripFare, Schedule, ConcurrentResults
+from .exceptions import ScraperError, ProxyError, RateLimitError
+from .types import Airport, OneWayFare, RoundTripFare, ConcurrentResults
 from ..utils.timer import Timer
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("scraper.base")
 
 
 class BaseScraper(ABC):
@@ -203,9 +203,11 @@ class BaseScraper(ABC):
                 )
                 
                 if response.status == 429:
-                    raise RateLimitError(f"Rate limited on {url}")
-                if response.status in (401, 403):
-                    raise ProxyBlockedError(f"Proxy {proxy} blocked for {url}")
+                    raise RateLimitError(f"Rate limited (429) on {url}")
+                if response.status == 403:
+                    raise ProxyError(f"Forbidden (403) for {url}")
+                if response.status == 401:
+                    raise ProxyError(f"Unauthorized (401) for {url}")
                 
                 if response.status >= 400:
                     body = await response.text()
